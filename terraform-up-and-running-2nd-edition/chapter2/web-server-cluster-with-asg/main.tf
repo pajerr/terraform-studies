@@ -70,7 +70,8 @@ variable "server_port" {
 #LB resource itself
 resource "aws_lb" "example" {
 
-  name               = var.alb_name
+  #name               = var.alb_name
+  name               = "terraform-asg-example"  
 
   load_balancer_type = "application"
   subnets            = data.aws_subnet_ids.default.ids
@@ -115,6 +116,10 @@ resource "aws_lb_listener" "http" {
   }
 }
 
+variable "alb_security_group_name" {
+  default = "terraform-example-alb"
+}
+
 #LB Security group resource to control inbound and outbound traffic
 resource "aws_security_group" "alb" {
 
@@ -135,6 +140,10 @@ resource "aws_security_group" "alb" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+variable "alb_name" {
+  default = "terraform-alb-tg"
 }
 
 #Target group for LB to specify where to forward incoming traffic

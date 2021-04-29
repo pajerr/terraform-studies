@@ -60,7 +60,7 @@ resource "aws_security_group" "instance" {
   }
 }
 
-#also in first example
+#Server port variable used in user data and EC2 security group
 variable "server_port" {
   description = "The port the server will use for HTTP requests"
   type        = number
@@ -71,12 +71,12 @@ variable "server_port" {
 resource "aws_lb" "example" {
 
   #name               = var.alb_name
-  name               = "terraform-asg-example"  
+  name               = "terraform-asg-example" 
 
   load_balancer_type = "application"
   subnets            = data.aws_subnet_ids.default.ids
 
-  #Tell LB to use Security "alb" group defined in Security group resource
+  #Tell LB to use Security group "alb" defined in Security group resource
   security_groups    = [aws_security_group.alb.id]
 }
 

@@ -3,38 +3,22 @@ provider "aws" {
 }
 
 resource "aws_launch_configuration" "example" {
-    image_id           = "ami-0c55b159cbfafe1f0"
-    instance_type      = "t2.micro"
-    security_groups    = [aws_security_group.instance.id]
+  image_id        = "ami-0c55b159cbfafe1f0"
+  instance_type   = "t2.micro"
+  security_groups = [aws_security_group.instance.id]
 
-#To use a reference inside of a string literal, you need to use a new type of expression called an interpolation, which has the following syntax:
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "Hello, World" > index.html
+              nohup busybox httpd -f -p ${var.server_port} &
+              EOF
 
-    user_data = <<-EOF
-                #!/bin/bash
-                echo "Hello, World" > index.html
-                nohup busybox httpd -f -p "${var.server_port}" &
-                EOF
-
-    #ASG uses reference to fill in launch configuration name
-    #Launch configs are immutable so if you change parameter to launch config 
-    #Terraform will try to replace it, old resources are deleted first, before creating new one
-    #ASG has reference to old resource and wont be able to delete it
-    #We need lifecycle to specify create new instance before deletion
-    lifecycle { 
-    create_before_destroy = true 
-    }  
+  # Required when using a launch configuration with an auto scaling group.
+  # https://www.terraform.io/docs/providers/aws/r/launch_configuration.html
+  lifecycle {
+    create_before_destroy = true
+  }
 }
-
-
-#Data source to look up default VPC in AWS
-data "aws_vpc" "default" { 
-  default = true 
-}
-
-#2nd DS to use in combination with the above to look up subnets in VPC
-data "aws_subnet_ids" "default" { 
-  vpc_id = data.aws_vpc.default.id
-} 
 
 resource "aws_autoscaling_group" "example" {
   launch_configuration = aws_launch_configuration.example.name
@@ -54,50 +38,29 @@ resource "aws_autoscaling_group" "example" {
   }
 }
 
-### Load balancer resource definition
-resource "aws_lb" "example" {
-
-  name               = "terraform-asg-example"
-  load_balancer_type = "application"
-  subnets            = data.aws_subnet_ids.default.ids
-  security_groups    = [aws_security_group.alb.id]
+#Data source to look up default VPC in AWS
+data "aws_vpc" "default" {
+  default = true
 }
 
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.example.arn
-  port              = 80
-  protocol          = "HTTP"
+#2nd DS to use in combination with the above to look up subnets in VPC
+data "aws_subnet_ids" "default" {
+  vpc_id = data.aws_vpc.default.id
+}
 
-  # By default, return a simple 404 page
-  default_action {
-    type = "fixed-response"
 
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "404: page not found"
-      status_code  = 404
-    }
+resource "aws_security_group" "instance" {
+    name = "terraform-example-instance"
+    ingress {
+        from_port   = var.server_port
+        to_port     = var.server_port
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
-#To allow traffic to LB we need to create SG where we allow traffic
-resource "aws_security_group" "alb" {
-
-  name = var.alb_security_group_name
-
-  # Allow inbound HTTP requests
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Allow all outbound requests
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+variable "server_port" {
+  description = "The port the server will use for HTTP requests"
+  type        = number
+  default     = 8080
 }

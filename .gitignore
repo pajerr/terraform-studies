@@ -1,6 +1,7 @@
 *terraform.tfvars
 *terraform.tfstate
 *terraform.tfstate.backup
+*backend.hcl
 *.terraform
 *mykey*
 *.terraform.lock.hcl

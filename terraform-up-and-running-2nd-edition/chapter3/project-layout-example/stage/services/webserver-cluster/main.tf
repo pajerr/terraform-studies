@@ -2,16 +2,35 @@ provider "aws" {
     region = "us-east-2"
 }
 
+terraform { 
+    backend "s3" {
+        #keys s3 path matches with project directory structure
+        key = "stage/services/webserver-cluster"
+    }
+}
+
+#data source to get info in RO mode from another modules state
+data "terraform_remote_state" "db" { 
+  backend = "s3" 
+  config = { 
+    bucket  = var.s3_bucket_name
+    key     = "stage/data-stores/mysql/terraform.tfstate" 
+    region  = "us-east-2" 
+  } 
+}
+
 resource "aws_launch_configuration" "example" {
   image_id        = "ami-0c55b159cbfafe1f0"
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.instance.id]
 
-  user_data = <<-EOF
-              #!/bin/bash
-              echo "Hello, World" > index.html
-              nohup busybox httpd -f -p ${var.server_port} &
-              EOF
+  user_data = <<EOF 
+              #!/bin/bash 
+              echo "Hello, World" >> index.html 
+              echo "${data.terraform_remote_state.db.outputs.address}" >> index.html 
+              echo "${data.terraform_remote_state.db.outputs.port}" >> index.html 
+              nohup busybox httpd f p ${ var . server_port } & 
+              EOF 
 
   # Required when using a launch configuration with an auto scaling group.
   # https://www.terraform.io/docs/providers/aws/r/launch_configuration.html
@@ -60,12 +79,6 @@ resource "aws_security_group" "instance" {
   }
 }
 
-#Server port variable used in user data and EC2 security group
-variable "server_port" {
-  description = "The port the server will use for HTTP requests"
-  type        = number
-  default     = 8080
-}
 
 #LB resource itself
 resource "aws_lb" "example" {
@@ -116,10 +129,6 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-variable "alb_security_group_name" {
-  default = "terraform-example-alb"
-}
-
 #LB Security group resource to control inbound and outbound traffic
 resource "aws_security_group" "alb" {
 
@@ -142,10 +151,6 @@ resource "aws_security_group" "alb" {
   }
 }
 
-variable "alb_name" {
-  default = "terraform-alb-tg"
-}
-
 #Target group for LB to specify where to forward incoming traffic
 resource "aws_lb_target_group" "asg" {
 
@@ -164,9 +169,4 @@ resource "aws_lb_target_group" "asg" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
-}
-
-output "alb_dns_name" { 
-  value = aws_lb.example.dns_name
-  description = "The domain name of the load balancer" 
 }

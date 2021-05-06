@@ -29,7 +29,8 @@ resource "aws_launch_configuration" "example" {
               echo "Hello, World" >> index.html 
               echo "${data.terraform_remote_state.db.outputs.address}" >> index.html 
               echo "${data.terraform_remote_state.db.outputs.port}" >> index.html 
-              nohup busybox httpd f p ${ var . server_port } & 
+              nohup busybox httpd -f -p ${var.server_port}
+              &
               EOF 
 
   # Required when using a launch configuration with an auto scaling group.

@@ -162,7 +162,7 @@ resource "aws_security_group" "alb" {
 #Target group for LB to specify where to forward incoming traffic
 resource "aws_lb_target_group" "asg" {
 
-  name = var.alb_name
+  name     = var.alb_name
 
   port     = var.server_port
   protocol = "HTTP"

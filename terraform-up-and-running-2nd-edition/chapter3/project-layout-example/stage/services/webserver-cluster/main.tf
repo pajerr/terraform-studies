@@ -11,7 +11,8 @@ terraform {
 
 #data source to get info in RO mode from another modules state
 data "terraform_remote_state" "example" { 
-  backend = "s3" 
+  backend = "s3"
+
   config = { 
     bucket  = var.s3_bucket_name
     key     = "stage/data-stores/mysql/terraform.tfstate" 
@@ -25,7 +26,7 @@ data "terraform_remote_state" "example" {
 #of variables to make available while rendering. 
 #Brikman, Yevgeniy. Terraform: Up & Running (p. 173).
 data "template_file" "user_data" {
-  template = file ("user-data.sh")
+  template = file("user-data.sh")
 
   vars = {
   server_port = var.server_port 
@@ -38,7 +39,7 @@ resource "aws_launch_configuration" "example" {
   image_id        = "ami-0c55b159cbfafe1f0"
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.instance.id]
-  user_data = data.template_file.user_data.rendered 
+  user_data       = data.template_file.user_data.rendered 
 
 
   # Required when using a launch configuration with an auto scaling group.
@@ -168,7 +169,7 @@ resource "aws_lb_target_group" "asg" {
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
 
-  health_check {
+    health_check {
     path                = "/"
     protocol            = "HTTP"
     matcher             = "200"

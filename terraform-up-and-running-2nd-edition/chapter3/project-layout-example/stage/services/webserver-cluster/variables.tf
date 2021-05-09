@@ -6,11 +6,11 @@ variable "server_port" {
 }
 
 variable "alb_security_group_name" {
-  default = "terraform-example-alb"
+  default = "terraform-example-alb-sg"
 }
 
 variable "alb_name" {
-  default = "terraform-alb-tg"
+  default = "terraform-example-alb"
 }
 
 variable "s3_bucket_name" {}

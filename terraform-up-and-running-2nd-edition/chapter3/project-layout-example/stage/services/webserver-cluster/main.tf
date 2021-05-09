@@ -39,8 +39,7 @@ resource "aws_launch_configuration" "example" {
   image_id        = "ami-0c55b159cbfafe1f0"
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.instance.id]
-  user_data       = data.template_file.user_data.rendered 
-
+  user_data       = data.template_file.user_data.rendered
 
   # Required when using a launch configuration with an auto scaling group.
   # https://www.terraform.io/docs/providers/aws/r/launch_configuration.html
@@ -56,6 +55,7 @@ resource "aws_autoscaling_group" "example" {
 
   #Attach EC2 instances created by ASG to ALBs target group
   target_group_arns = [aws_lb_target_group.asg.arn]
+  #ELB Health check uses HC rule, EC2 type health check would only check if EC2 instance is up
   health_check_type = "ELB"
 
   min_size = 2
@@ -92,8 +92,8 @@ resource "aws_security_group" "instance" {
 #LB resource itself
 resource "aws_lb" "example" {
 
-  #name               = var.alb_name
-  name               = "terraform-asg-example" 
+  name               = var.alb_name
+  #name               = "terraform-asg-example" 
 
   load_balancer_type = "application"
   subnets            = data.aws_subnet_ids.default.ids
@@ -120,7 +120,7 @@ resource "aws_lb_listener_rule" "asg" {
   }
 }
 
-#AWS Listener config
+#Loadbalancer Listener config
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.example.arn
   port              = 80

@@ -41,6 +41,9 @@ resource "aws_launch_configuration" "example" {
   security_groups = [aws_security_group.instance.id]
   user_data       = data.template_file.user_data.rendered
 
+  # the public SSH key
+  key_name = aws_key_pair.mykeypair2.key_name
+
   # Required when using a launch configuration with an auto scaling group.
   # https://www.terraform.io/docs/providers/aws/r/launch_configuration.html
   lifecycle {
@@ -84,6 +87,13 @@ resource "aws_security_group" "instance" {
     ingress {
         from_port   = var.server_port
         to_port     = var.server_port
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+  }
+
+      ingress {
+        from_port   = 22
+        to_port     = 22
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
   }

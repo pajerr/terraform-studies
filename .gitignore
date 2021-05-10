@@ -4,4 +4,6 @@
 *backend.hcl
 *.terraform
 *mykey*
+*my-test-key*
 *.terraform.lock.hcl
+*.DS_Store

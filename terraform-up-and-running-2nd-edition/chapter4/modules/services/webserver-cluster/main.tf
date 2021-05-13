@@ -1,7 +1,3 @@
-provider "aws" {
-    region = "us-east-2"
-}
-
 terraform { 
     backend "s3" {
         #keys s3 path matches with project directory structure
@@ -13,9 +9,10 @@ terraform {
 data "terraform_remote_state" "example" { 
   backend = "s3"
 
+  #bucket and key are from input variables
   config = { 
-    bucket  = var.s3_bucket_name
-    key     = "stage/data-stores/mysql/terraform.tfstate" 
+    bucket  = var.db_remote_state_bucket
+    key     = var.db_remote_state_key
     region  = "us-east-2" 
   } 
 }
@@ -37,7 +34,7 @@ data "template_file" "user_data" {
 
 resource "aws_launch_configuration" "example" {
   image_id        = "ami-0c55b159cbfafe1f0"
-  instance_type   = "t2.micro"
+  instance_type   = var.instance_type
   security_groups = [aws_security_group.instance.id]
   user_data       = data.template_file.user_data.rendered
 
@@ -61,12 +58,12 @@ resource "aws_autoscaling_group" "example" {
   #ELB Health check uses HC rule, EC2 type health check would only check if EC2 instance is up
   health_check_type = "ELB"
 
-  min_size = 2
-  max_size = 10
+  min_size = var.min_size
+  max_size = var.max_size
 
   tag {
     key                 = "Name"
-    value               = "terraform-asg-example"
+    value               = "${var.cluster_name}-terraform-asg-example"
     propagate_at_launch = true
   }
 }
@@ -83,7 +80,8 @@ data "aws_subnet_ids" "default" {
 
 #Security group attached to EC2 instances
 resource "aws_security_group" "instance" {
-    name = "terraform-example-instance"
+    name = "${var.cluster_name}-instance"
+
     ingress {
         from_port   = var.server_port
         to_port     = var.server_port
@@ -102,8 +100,7 @@ resource "aws_security_group" "instance" {
 #LB resource itself
 resource "aws_lb" "example" {
 
-  name               = var.alb_name
-  #name               = "terraform-asg-example" 
+  name               = "${var.cluster_name}-lb"
 
   load_balancer_type = "application"
   subnets            = data.aws_subnet_ids.default.ids
@@ -151,7 +148,8 @@ resource "aws_lb_listener" "http" {
 #LB Security group resource to control inbound and outbound traffic
 resource "aws_security_group" "alb" {
 
-  name = var.alb_security_group_name
+  #input variable from environment directory
+  name = "${var.cluster_name}-alb" 
 
   # Allow inbound HTTP requests
   ingress {

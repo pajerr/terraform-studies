@@ -3,7 +3,8 @@ output "alb_dns_name" {
   description = "The domain name of the load balancer" 
 }
 
-#output "rds_db_address" {
-#  value = terraform_remote_state.db.outputs.address
-#  description = "IP of mysql rds instance"
-#}
+#Output value for ASG resource scheduling action to work from prod env
+output "asg_name" { 
+  value = aws_autoscaling_group.example.name
+  description = "The name of the Auto Scaling Group" 
+}

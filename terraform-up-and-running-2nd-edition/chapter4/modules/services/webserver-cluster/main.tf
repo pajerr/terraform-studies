@@ -1,16 +1,16 @@
-terraform { 
-    backend "s3" {
-        #keys s3 path matches with project directory structure
-        key = "stage/services/webserver-cluster"
-    }
-}
+#terraform { 
+#    backend "s3" {
+#        #keys s3 path matches with project directory structure
+#        key = "stage/services/webserver-cluster"
+#    }
+#}
 
 #data source to get info in RO mode from another modules state
 data "terraform_remote_state" "example" { 
   backend = "s3"
 
-  #bucket and key are from input variables
-  config = { 
+    #bucket and key are from input variables
+    config = { 
     bucket  = var.db_remote_state_bucket
     key     = var.db_remote_state_key
     region  = "us-east-2" 
@@ -50,7 +50,7 @@ resource "aws_launch_configuration" "example" {
   user_data       = data.template_file.user_data.rendered
 
   # the public SSH key
-  key_name = aws_key_pair.mykeypair2.key_name
+  #key_name = aws_key_pair.mykeypair2.key_name
 
   # Required when using a launch configuration with an auto scaling group.
   # https://www.terraform.io/docs/providers/aws/r/launch_configuration.html
@@ -95,23 +95,23 @@ resource "aws_security_group" "instance" {
 }
 
 resource "aws_security_group_rule" "instance_allow_server_port" {
-  type = ingress
-  security_group_id = aws_security_group.instance.id
+  type                = "ingress"
+  security_group_id   = aws_security_group.instance.id
 
-  from_port   = var.server_port
-  to_port     = var.server_port
-  protocol    = local.tcp_protocol
-  cidr_blocks = local.all_ips
+from_port             = var.server_port
+  to_port             = var.server_port
+  protocol            = local.tcp_protocol
+  cidr_blocks         = local.all_ips
 }
 
 resource "aws_security_group_rule" "instance_allow_ssh" {
-  type = ingress
-  security_group_id = aws_security_group.instance.id
+  type                = "ingress"
+  security_group_id   = aws_security_group.instance.id
 
-  from_port   = local.ssh_port
-  to_port     = local.ssh_port
-  protocol    = local.tcp_protocol
-  cidr_blocks = local.all_ips
+  from_port           = local.ssh_port
+  to_port             = local.ssh_port
+  protocol            = local.tcp_protocol
+  cidr_blocks         = local.all_ips
 }
 
 #LB resource itself

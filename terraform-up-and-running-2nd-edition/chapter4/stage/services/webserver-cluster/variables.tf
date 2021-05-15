@@ -6,6 +6,7 @@ variable "cluster_name" {
   default     = "webservers-stage"
 }
 
+#Datastore config needs to be applied first so we can use its remote state
 variable "db_remote_state_bucket" {
   description = "The name of the S3 bucket for the database's remote state"
   type        = string

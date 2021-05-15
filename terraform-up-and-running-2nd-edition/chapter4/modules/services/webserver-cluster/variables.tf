@@ -13,15 +13,15 @@ variable "alb_name" {
   default = "terraform-example-alb"
 }
 
-variable "s3_bucket_name" {}
+#variable "s3_bucket_name" {}
 
-variable "PATH_TO_PRIVATE_KEY" {
-  default = "my-test-key"
-}
+#variable "PATH_TO_PRIVATE_KEY" {
+#  default = "my-test-key"
+#}
 
-variable "PATH_TO_PUBLIC_KEY" {
-  default = "my-test-key.pub"
-}
+#variable "PATH_TO_PUBLIC_KEY" {
+#  default = "my-test-key.pub"
+#}
 
 #Input parameters
 variable "cluster_name" { 

@@ -18,7 +18,8 @@ data "terraform_remote_state" "example" {
 }
 
 locals {
-  http_port = 80 
+  http_port = 80
+  ssh_port = 22 
   any_port = 0 
   any_protocol = "-1" 
   tcp_protocol = "tcp" 
@@ -93,23 +94,24 @@ resource "aws_security_group" "instance" {
     name = "${var.cluster_name}-instance"
 }
 
-resource "aws_security_group_rule" "instance" {
+resource "aws_security_group_rule" "instance_allow_server_port" {
   type = ingress
   security_group_id = aws_security_group.instance.id
 
   from_port   = var.server_port
   to_port     = var.server_port
-  protocol    = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]  
+  protocol    = local.tcp_protocol
+  cidr_blocks = local.all_ips
 }
-resource "aws_security_group_rule" "instance" {
+
+resource "aws_security_group_rule" "instance_allow_ssh" {
   type = ingress
   security_group_id = aws_security_group.instance.id
 
-  from_port   = 22
-  to_port     = 22
-  protocol    = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]
+  from_port   = local.ssh_port
+  to_port     = local.ssh_port
+  protocol    = local.tcp_protocol
+  cidr_blocks = local.all_ips
 }
 
 #LB resource itself
@@ -166,11 +168,10 @@ resource "aws_security_group" "alb" {
   name = "${var.cluster_name}-alb" 
 }
 
-resource "aws_security_group_rule"
-"allow_http_inbound" {
-  # Allow inbound HTTP requests
-  type              = "ingress" 
-  security_group_id = aws_security_group.alb.id
+resource "aws_security_group_rule" "allow_http_inbound" {
+    # Allow inbound HTTP requests
+    type              = "ingress" 
+    security_group_id = aws_security_group.alb.id
 
     from_port   = local.http_port
     to_port     = local.http_port
@@ -178,9 +179,8 @@ resource "aws_security_group_rule"
     cidr_blocks = local.all_ips
 }
 
-resource "aws_security_group_rule"
-"allow_all_outbound" {
-    # Allow all outbouind traffic
+resource "aws_security_group_rule" "allow_all_outbound" {
+    # Allow all outbound traffic
     type              = "egress" 
     security_group_id = aws_security_group.alb.id
 
